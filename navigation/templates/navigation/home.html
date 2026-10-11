@@ -1,0 +1,342 @@
+{% extends 'navigation/base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-white d-flex align-items-center mb-5" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1541339907198-e08756ebafe3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; min-height: 500px;">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-7">
+                <h1 class="display-3 fw-bold mb-4">Your Path to <span class="spu-text-orange">Excellence</span> Starts Here</h1>
+                <p class="lead mb-5 fs-4">Experience a modern campus environment designed for success. Our smart navigation system ensures you spend less time searching and more time learning.</p>
+                <div class="d-flex gap-3">
+                    <a href="#navigate" class="btn btn-primary btn-lg">Start Navigating</a>
+                    <a href="#about" class="btn btn-outline-light btn-lg px-4">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section id="about" class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h2 class="section-title">About the Institution</h2>
+            <p class="lead text-muted mb-4">Sol Plaatje University (SPU) is a public university located in Kimberley, South Africa, established to provide high-quality education in a modern urban setting.</p>
+            <p class="mb-4">Our campus is a hub of innovation, blending historical significance with state-of-the-art facilities. We are committed to academic excellence and community engagement, fostering an environment where students can thrive.</p>
+            <div class="row g-4">
+                <div class="col-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-3 rounded-circle me-3">
+                            <i class="bi bi-mortarboard-fill spu-text-red fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">15+</h4>
+                            <small class="text-muted">Programmes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light p-3 rounded-circle me-3">
+                            <i class="bi bi-people-fill spu-text-red fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">5000+</h4>
+                            <small class="text-muted">Students</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="row g-3">
+                <div class="col-6">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" class="img-fluid rounded shadow-sm" alt="Campus Life">
+                </div>
+                <div class="col-6 mt-5">
+                    <img src="https://images.unsplash.com/photo-1498243639359-2cee3e0924a0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" class="img-fluid rounded shadow-sm" alt="Library">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Navigation Section -->
+<section id="navigate" class="bg-light py-5">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="section-title d-inline-block">Smart Campus Navigation</h2>
+            <p class="text-muted">Find the quickest route between any two points on campus.</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2 spu-text-orange"></i>Find Your Route</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                        {% endif %}
+                        <form action="{% url 'navigation:find_route' %}" method="post">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label for="start_location" class="form-label fw-bold">Starting From:</label>
+                                <select name="start_location" id="start_location" class="form-select form-select-lg" required>
+                                    <option value="">-- Select Location --</option>
+                                    {% for loc in locations %}
+                                    <option value="{{ loc.id }}">{{ loc.name }} ({{ loc.get_location_type_display }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label for="end_location" class="form-label fw-bold">Going To:</label>
+                                <select name="end_location" id="end_location" class="form-select form-select-lg" required>
+                                    <option value="">-- Select Destination --</option>
+                                    {% for loc in locations %}
+                                    <option value="{{ loc.id }}">{{ loc.name }} ({{ loc.get_location_type_display }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">Calculate Route</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                    <div class="card-body p-0 position-relative" style="background-color: #ffffff; min-height: 450px;">
+                        <div id="map-placeholder" class="d-flex flex-column align-items-center justify-content-center h-100 text-muted position-relative" style="z-index: 1;">
+                            <div class="bg-white bg-opacity-75 p-4 rounded-4 shadow-sm text-center mx-4">
+                                <div class="bg-light p-3 rounded-circle mb-3 d-inline-block">
+                                    <i class="bi bi-map spu-text-orange" style="font-size: 2rem;"></i>
+                                </div>
+                                <h4>Interactive Campus Map</h4>
+                                <p class="mb-0">Select your locations to visualize the optimized route.</p>
+                            </div>
+                        </div>
+                        <canvas id="campusGraph" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Courses/Programmes Section -->
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="section-title d-inline-block">Academic Programmes</h2>
+        <p class="text-muted">Explore our diverse range of world-class courses.</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-cpu spu-text-orange" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="fw-bold">ICT & Data Science</h4>
+                <p class="text-muted">Innovative computing and data analysis programmes for the digital age.</p>
+                <a href="#" class="text-decoration-none spu-text-red fw-bold mt-auto">Explore Faculty <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-bank spu-text-orange" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="fw-bold">Economic Sciences</h4>
+                <p class="text-muted">Developing business leaders and economic thinkers for South Africa's future.</p>
+                <a href="#" class="text-decoration-none spu-text-red fw-bold mt-auto">Explore Faculty <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-book spu-text-orange" style="font-size: 2.5rem;"></i>
+                </div>
+                <h4 class="fw-bold">Education</h4>
+                <p class="text-muted">Empowering the next generation of educators through quality teacher training.</p>
+                <a href="#" class="text-decoration-none spu-text-red fw-bold mt-auto">Explore Faculty <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Admissions & News Section -->
+<section class="bg-light py-5">
+    <div class="container py-4">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <h2 class="section-title">Admissions</h2>
+                <div class="card border-0 shadow-sm overflow-hidden mb-4">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" class="img-fluid h-100 object-fit-cover" alt="Apply Now">
+                        </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h5 class="fw-bold">Apply for 2026</h5>
+                                <p class="small text-muted">Applications for the 2026 academic year are now open. Secure your future today.</p>
+                                <a href="#" class="btn btn-sm btn-primary">Start Application</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <img src="https://images.unsplash.com/photo-1541339907198-e08756ebafe3?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" class="img-fluid h-100 object-fit-cover" alt="Financial Aid">
+                        </div>
+                        <div class="col-8">
+                            <div class="card-body">
+                                <h5 class="fw-bold">Financial Aid</h5>
+                                <p class="small text-muted">Learn more about NSFAS and other bursary opportunities available to students.</p>
+                                <a href="#" class="btn btn-sm btn-secondary">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <h2 class="section-title">Latest News</h2>
+                <ul class="list-unstyled">
+                    <li class="mb-4 d-flex">
+                        <div class="me-3 text-center" style="min-width: 60px;">
+                            <div class="bg-white border rounded p-2">
+                                <h4 class="mb-0 fw-bold spu-text-red">28</h4>
+                                <small class="text-uppercase text-muted">Apr</small>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">New Smart Campus Features Launched</h5>
+                            <p class="small text-muted">SPU introduces advanced navigation features to enhance student campus experience.</p>
+                        </div>
+                    </li>
+                    <li class="mb-4 d-flex">
+                        <div class="me-3 text-center" style="min-width: 60px;">
+                            <div class="bg-white border rounded p-2">
+                                <h4 class="mb-0 fw-bold spu-text-red">25</h4>
+                                <small class="text-uppercase text-muted">Apr</small>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">2026 Admissions Open Day</h5>
+                            <p class="small text-muted">Join us this weekend to explore our campus and meet faculty representatives.</p>
+                        </div>
+                    </li>
+                    <li class="d-flex">
+                        <div class="me-3 text-center" style="min-width: 60px;">
+                            <div class="bg-white border rounded p-2">
+                                <h4 class="mb-0 fw-bold spu-text-red">20</h4>
+                                <small class="text-uppercase text-muted">Apr</small>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">ICT Innovation Hub Opens</h5>
+                            <p class="small text-muted">The new hub will provide students with state-of-the-art technology resources.</p>
+                        </div>
+                    </li>
+                </ul>
+                <div class="mt-4">
+                    <a href="#" class="btn btn-outline-dark">View All News</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const canvas = document.getElementById('campusGraph');
+    const ctx = canvas.getContext('2d');
+    
+    // Data passed from Django
+    const locations = [
+        {% for loc in locations %}
+        { id: {{ loc.id }}, name: "{{ loc.name }}", x: {{ loc.longitude }}, y: {{ loc.latitude }} },
+        {% endfor %}
+    ];
+    
+    const paths = [
+        {% for path in paths %}
+        { start: {{ path.start_location.id }}, end: {{ path.end_location.id }} },
+        {% endfor %}
+    ];
+
+    function resizeCanvas() {
+        if (!canvas) return;
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        drawGraph();
+    }
+
+    function drawGraph() {
+        if (!ctx || locations.length === 0) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Find min/max coordinates to scale
+        const minX = Math.min(...locations.map(l => l.x));
+        const maxX = Math.max(...locations.map(l => l.x));
+        const minY = Math.min(...locations.map(l => l.y));
+        const maxY = Math.max(...locations.map(l => l.y));
+        
+        const padding = 60;
+        const scaleX = (canvas.width - padding * 2) / (maxX - minX || 1);
+        const scaleY = (canvas.height - padding * 2) / (maxY - minY || 1);
+        
+        const getCanvasX = (x) => padding + (x - minX) * scaleX;
+        const getCanvasY = (y) => canvas.height - (padding + (y - minY) * scaleY); // Flip Y for canvas
+
+        // Draw paths
+        ctx.strokeStyle = '#E0E0E0';
+        ctx.lineWidth = 2;
+        paths.forEach(p => {
+            const s = locations.find(l => l.id === p.start);
+            const e = locations.find(l => l.id === p.end);
+            if (s && e) {
+                ctx.beginPath();
+                ctx.moveTo(getCanvasX(s.x), getCanvasY(s.y));
+                ctx.lineTo(getCanvasX(e.x), getCanvasY(e.y));
+                ctx.stroke();
+            }
+        });
+
+        // Draw nodes
+        locations.forEach(l => {
+            const x = getCanvasX(l.x);
+            const y = getCanvasY(l.y);
+            
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(243, 108, 33, 0.2)';
+            ctx.fill();
+            
+            // Node
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#F36C21';
+            ctx.fill();
+            
+            // Label
+            ctx.fillStyle = '#444';
+            ctx.font = 'bold 10px Open Sans';
+            ctx.textAlign = 'center';
+            ctx.fillText(l.name, x, y - 12);
+        });
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+</script>
+{% endblock %}
